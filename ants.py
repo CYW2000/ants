@@ -55,7 +55,7 @@ class Place(object):
         "*** YOUR CODE HERE ***"
         #     If the Place has an exit, then the exit's entrance is set to that Place.
         if self.exit:
-            exit.entrance = self
+            self.exit.entrance = self
 
         # END Problem 2
 
@@ -171,10 +171,19 @@ class Bee(Insect):
         self.place.remove_insect(self)
         place.add_insect(self)
 
+
     def blocked(self):
         """Return True if this Bee cannot advance to the next Place."""
-        # Phase 4: Special handling for NinjaAnt
+        # Phase 4: Special handling for NinjaAnt:
+            #DONE: Bee.blocked should return False if there is no Ant in Bee's place 
+            #OR if there is an ant:
+            #Bee.blocks_path should return False if ant.blocks_path is False
+
         # BEGIN Problem 7
+            #Bee.blocked should return False if there is no Ant in Bee's place 
+            if not self.place.ant and self.place.ant.blocks_path == False:
+                return False
+
         return self.place.ant is not None
         # END Problem 7
 
@@ -201,6 +210,7 @@ class Ant(Insect):
     is_ant = True
     implemented = False  # Only implemented Ant classes should be instantiated
     food_cost = 0
+    blocks_path = True
     # ADD CLASS ATTRIBUTES HERE
 
     def __init__(self, armor=1):
@@ -362,7 +372,7 @@ def random_or_none(s):
 
 #DONE: LongThrower food_cost = 2, armor = 1
 #DONE: LongThrower should only be able to throw_at a bee after moving at least 5 entrance transitions
-    # DONE: LongThrower min_range = 5
+    # DONE: LongThrower min_range = 4
     #DONE: LongThrower max_range = infinity?
 #LongThrower should not hit bees in the same place as it is
 #LongThrower should not hit bees exactly 4 places in front of it
@@ -413,6 +423,45 @@ class LongThrower(ThrowerAnt):
 
     # END Problem 4
 
+
+# Problem 5 (2 pt)
+
+# Implement the FireAnt, which damages all the bees in the same place as itself when it dies. 
+#To implement this, we have to override the FireAnt's reduce_armor method.
+# Normally, Insect.reduce_armor will decrement the insect's armor by the given amount 
+#and remove the insect from its place if armor reaches zero or lower. 
+#However, if a FireAnt's armor reaches zero or lower,
+# it will reduce the armor of all Bees in its place by its damage attribute 
+#(defaults to 3) before being removed from its place.
+
+# Class   Food Cost   Armor
+# FireAnt     5   1
+
+#     Hint: To damage a Bee, call the reduce_armor method inherited from Insect.
+
+#Hint: Damaging a bee may cause it to be removed from its place. 
+
+#If you iterate over a list, but change the contents of that list at the same time, 
+#you may not visit all the elements. This can be prevented by making a copy of the list. 
+#You can either use a list slice, or use the built-in list function.
+
+#      >>> lst = [1,2,3,4]
+#      >>> lst[:]
+#      [1, 2, 3, 4]
+#      >>> list(lst)
+#      [1, 2, 3, 4]
+#      >>> lst[:] is not lst and list(lst) is not lst
+#      True
+
+#requirments:
+#DONE: it should override reduce_armor method
+#DONE: FireAnt.reduce_armor should reduce armor of all bees in fireants place by fireant.dammange if armor <=0
+    #DONE: FireAnt should itterate over copy of place.bees
+#DONE: Fireant should be removed from its place if armor <= 0
+
+#DONE: FireAnt.food_cost should equal 5
+#DONE: FireAnt.armor should equal 1
+
 class FireAnt(Ant):
     """FireAnt cooks any Bee in its Place when it expires."""
 
@@ -420,7 +469,12 @@ class FireAnt(Ant):
     damage = 3
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem 5
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
+    #FireAnt.food_cost should equal 5
+    food_cost = 5
+    #FireAnt.armor should equal 1
+
+    armor = 1
     # END Problem 5
 
     def reduce_armor(self, amount):
@@ -430,7 +484,50 @@ class FireAnt(Ant):
         """
         # BEGIN Problem 5
         "*** YOUR CODE HERE ***"
+        #FireAnt.reduce_armor should reduce armor of all bees in fireants place by fireant.dammange if armor <=0
+        
+        #if armor <=0
+        if self.armor - amount <= 0:
+            #FireAnt should itterate over copy of place.bees
+            bees_copy = self.place.bees[:]
+
+            for bee in bees_copy:
+                #FireAnt.reduce_armor should reduce armor of all bees in fireants place by 
+                #fireant.dammange 
+                bee.reduce_armor(self.damage)
+
+        #Fireant should remove itself
+        Insect.reduce_armor(self,amount)
+
+
         # END Problem 5
+
+# Problem 6 (2 pt)
+
+# Implement the HungryAnt, which will select a random Bee from its place and eat it whole. 
+#After eating a Bee, it must spend 3 turns digesting before eating again. 
+#If there is no bee available to eat, it will do nothing.
+
+# Class   Food Cost   Armor
+
+# HungryAnt   4   1
+
+# Give HungryAnt a time_to_digest class attribute that holds the number of turns that it 
+#takes a HungryAnt to digest (default to 3). Also, give each HungryAnt an instance 
+#attribute digesting that counts the number of turns it has left to digest 
+#(default is 0, since it hasn't eaten anything at the beginning).
+
+# Implement the action method of the HungryAnt to check if it's digesting;
+# if so, decrement its digesting counter. Otherwise, eat a random Bee in its place by 
+#reducing the Bee's armor to 0 and restart the digesting timer.
+
+#requirments
+#DONE: HungryAnt should have time_to_digest class attribute default 3
+#DONE:HungryAnt should have instance attribute digesting default 0
+
+#action should decriment digesting if it is digesting
+#action should eat a random bee in self.place if not digesting
+    #eat should be acheived by setting bee's armor to 0
 
 class HungryAnt(Ant):
     """HungryAnt will take three turns to digest a Bee in its place.
@@ -439,23 +536,78 @@ class HungryAnt(Ant):
     name = 'Hungry'
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem 6
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
+    #HungryAnt should have time_to_digest class attribute default 3
+    time_to_digest = 3
+    food_cost = 4
+
     # END Problem 6
 
-    def __init__(self, armor=1):
+    def __init__(self, armor=1, digesting=0):
         # BEGIN Problem 6
         "*** YOUR CODE HERE ***"
+        Ant.__init__(self)
+        self.armor = armor
+        #HungryAnt should have instance attribute digesting default 0
+        self.digesting = digesting
+
+
         # END Problem 6
 
     def eat_bee(self, bee):
         # BEGIN Problem 6
         "*** YOUR CODE HERE ***"
+        bee.reduce_armor(bee.armor)
+        self.digesting = self.time_to_digest
         # END Problem 6
 
     def action(self, colony):
         # BEGIN Problem 6
         "*** YOUR CODE HERE ***"
+        #action should decriment digesting if it is digesting
+        if self.digesting > 0:
+            self.digesting -= 1
+        else:
+            random_bee = random_or_none(self.place.bees)
+            if random_bee:
+                self.eat_bee(random_or_none(self.place.bees))
         # END Problem 6
+
+
+
+# Problem 7 (2 pt)
+
+# Implement the NinjaAnt, which damages all Bees that pass by, but can never be stung.
+# Class   Food Cost   Armor
+
+# NinjaAnt    5   1
+
+# A NinjaAnt does not block the path of a Bee that flies by. 
+#To implement this behavior, first modify the Ant class to include a new class attribute blocks_path that is True by default.
+# Set the value of blocks_path to False in the NinjaAnt class.
+
+# Second, modify the Bee's method blocked to return False if either there is no Ant in the Bee's place 
+#or if there is an Ant, but its blocks_path attribute is False. Now Bees will just fly past NinjaAnts.
+
+# Finally, we want to make the NinjaAnt damage all Bees that fly past.
+# Implement the action method in NinjaAnt to reduce the armor of all Bees in the same place as the NinjaAnt 
+#by its damage attribute. Similar to the FireAnt, you must iterate over a list of bees that may change.
+
+#DONE: NinvaAnt should have food_cost = 5
+#DONE: CfNinjaAnt should have armor = 1
+
+#DONE: Ant should have blocks_path default True
+#DONE: NinjaAnt should have blocks_paths = False
+
+#DONE: Bee.blocked should return False if there is no Ant in Bee's place 
+#OR if there is an ant:
+#DONE: Bee.blocks_path should return False if ant.blocks_path is False
+
+
+#DONE: NinjaAnt.action should reduce armor of all bees in place by dammage
+
+
+
 
 class NinjaAnt(Ant):
     """NinjaAnt does not block the path and damages all bees in its place."""
@@ -464,12 +616,25 @@ class NinjaAnt(Ant):
     damage = 1
     # OVERRIDE CLASS ATTRIBUTES HERE
     # BEGIN Problem 7
-    implemented = False   # Change to True to view in the GUI
+    implemented = True   # Change to True to view in the GUI
+    food_cost = 5
+    armor = 1
+    blocks_path = False
+
     # END Problem 7
 
     def action(self, colony):
         # BEGIN Problem 7
         "*** YOUR CODE HERE ***"
+
+        #NinjaAnt should itterate over copy of place.bees
+        bees_copy = self.place.bees[:]
+
+        for bee in bees_copy:
+            #NinjaAnt.reduce_armor should reduce armor of all bees in fireants place by 
+            #fireant.damange 
+            bee.reduce_armor(self.damage)
+
         # END Problem 7
 
 # BEGIN Problem 8
@@ -498,6 +663,8 @@ class BodyguardAnt(Ant):
         # BEGIN Problem 9
         "*** YOUR CODE HERE ***"
         # END Problem 9
+
+
 
 class TankAnt(BodyguardAnt):
     """TankAnt provides both offensive and defensive capabilities."""
