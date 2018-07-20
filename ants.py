@@ -181,8 +181,8 @@ class Bee(Insect):
 
         # BEGIN Problem 7
             #Bee.blocked should return False if there is no Ant in Bee's place 
-            if not self.place.ant and self.place.ant.blocks_path == False:
-                return False
+        if not self.place.ant or self.place.ant.blocks_path == False:
+            return False
 
         return self.place.ant is not None
         # END Problem 7
